@@ -1,12 +1,16 @@
 name: refresh_on_drag_indicator
 description: "This package integrate a drag funcionality at the bottom and top of a ScrollView having a Callback when the drag is completed"
-version: 0.0.1
+version: 0.0.2
 homepage:
 repository: https://github.com/JoseCaro01/refresh_on_drag_indicator
 
 environment:
   sdk: ^3.6.0
   flutter: ">=1.17.0"
+
+platforms:
+  android:
+  ios:
 
 dependencies:
   flutter:
