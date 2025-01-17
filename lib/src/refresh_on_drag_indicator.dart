@@ -101,7 +101,7 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
   late double _bottomStartPosition;
   late double _bottomEndPosition;
   late Widget _topLoaderWidget;
-   late Widget _bottomLoaderWidget;
+  late Widget _bottomLoaderWidget;
   double? _initialDrag;
 
   @override
@@ -142,7 +142,7 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
                     .devicePixelRatio) /
             8;
     _topLoaderWidget = widget.topLoaderWidget ?? RefreshLoader();
-       _bottomLoaderWidget = widget.topLoaderWidget ?? RefreshLoader();
+    _bottomLoaderWidget = widget.topLoaderWidget ?? RefreshLoader();
     _animationController = AnimationController(
       vsync: this,
       duration: widget.returnDuration,
@@ -162,7 +162,7 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
           : widget.onTopRequestedLoad?.call();
       await Future.delayed(widget.returnDuration);
     }
-    if(_drag.value >0.0)_animateToZero();
+    if (_drag.value > 0.0) _animateToZero();
   }
 
   /// Handles pointer-move events, updating the drag value based on the user's gesture.
@@ -171,7 +171,10 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
     if (_isEdge && _startAnimation) {
       _isBottomOverscroll.value ??=
           _initialDrag! > event.position.dy ? true : false;
-      if((widget.refreshDragType== RefreshDragEnum.top &&  _isBottomOverscroll.value!) || (widget.refreshDragType== RefreshDragEnum.bottom &&  !_isBottomOverscroll.value!)  ) return ;
+      if ((widget.refreshDragType == RefreshDragEnum.top &&
+              _isBottomOverscroll.value!) ||
+          (widget.refreshDragType == RefreshDragEnum.bottom &&
+              !_isBottomOverscroll.value!)) return;
       final delta = _isBottomOverscroll.value!
           ? _initialDrag! - event.position.dy
           : event.position.dy - (_initialDrag ?? event.position.dy);
