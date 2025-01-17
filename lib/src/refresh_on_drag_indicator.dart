@@ -174,7 +174,9 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
       if ((widget.refreshDragType == RefreshDragEnum.top &&
               _isBottomOverscroll.value!) ||
           (widget.refreshDragType == RefreshDragEnum.bottom &&
-              !_isBottomOverscroll.value!)) return;
+              !_isBottomOverscroll.value!)) {
+        return;
+      }
       final delta = _isBottomOverscroll.value!
           ? _initialDrag! - event.position.dy
           : event.position.dy - (_initialDrag ?? event.position.dy);
