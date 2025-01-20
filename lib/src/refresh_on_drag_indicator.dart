@@ -19,8 +19,9 @@ class RefreshOnDragIndicator extends StatefulWidget {
   /// [child] is the scrollable content wrapped by this widget.
   /// [onTopRequestedLoad] is the callback triggered when the drag exceeds the threshold.
   /// [returnDuration] defines the duration of the animation when the loader returns to its starting position.
-  /// [loaderWidget] is an optional widget displayed during the loading animation.
+  /// [topLoaderWidget] and [bottomLoaderWidget] is an optional widget displayed during the loading animation.
   /// [topStartPosition] and [topEndPosition] define the starting and ending positions
+  /// [bottomStartPosition] and [bottomEndPosition] define the starting and ending positions
   /// of the loader widget during the drag animation.
   const RefreshOnDragIndicator({
     super.key,
@@ -29,11 +30,11 @@ class RefreshOnDragIndicator extends StatefulWidget {
     this.onTopRequestedLoad,
     this.onBottomRequestedLoad,
     this.returnDuration = const Duration(milliseconds: 500),
-    this.topLoaderWidget,
-    this.bottomLoaderWidget,
-    this.topStartPosition,
+    this.topLoaderWidget = const RefreshLoader(),
+    this.bottomLoaderWidget = const RefreshLoader(),
+    this.topStartPosition = -60,
     this.topEndPosition,
-    this.bottomStartPosition,
+    this.bottomStartPosition = -60,
     this.bottomEndPosition,
   });
 
@@ -44,25 +45,25 @@ class RefreshOnDragIndicator extends StatefulWidget {
   final RefreshDragEnum refreshDragType;
 
   /// Callback triggered when the drag exceeds the threshold and loading is initiated.
-  final VoidCallback? onTopRequestedLoad;
+  final Future<void> Function()? onTopRequestedLoad;
 
   /// Callback triggered when the drag exceeds the threshold and loading is initiated.
-  final VoidCallback? onBottomRequestedLoad;
+  final Future<void> Function()? onBottomRequestedLoad;
 
   /// Optional widget displayed during the loading animation at top.
   ///
   /// Defaults to a simple [RefreshLoader] widget if not provided.
-  final Widget? topLoaderWidget;
+  final Widget topLoaderWidget;
 
   /// Optional widget displayed during the loading animation at bottom.
   ///
   /// Defaults to a simple [RefreshLoader] widget if not provided.
-  final Widget? bottomLoaderWidget;
+  final Widget bottomLoaderWidget;
 
   /// The starting position of the loader widget during the drag animation.
   ///
   /// Defaults to `-60` if not specified.
-  final double? topStartPosition;
+  final double topStartPosition;
 
   /// The ending position of the loader widget during the drag animation.
   ///
@@ -72,7 +73,7 @@ class RefreshOnDragIndicator extends StatefulWidget {
   /// The starting position of the loader widget during the drag animation.
   ///
   /// Defaults to `-60` if not specified.
-  final double? bottomStartPosition;
+  final double bottomStartPosition;
 
   /// The ending position of the loader widget during the drag animation.
   ///
@@ -96,13 +97,14 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
   late bool _startAnimation;
   late bool _isEdge;
   late bool _isLoading;
-  late double _topStartPosition;
-  late double _topEndPosition;
-  late double _bottomStartPosition;
-  late double _bottomEndPosition;
-  late Widget _topLoaderWidget;
-  late Widget _bottomLoaderWidget;
   double? _initialDrag;
+
+  double get _defaultEndPosition =>
+      (WidgetsBinding
+              .instance.platformDispatcher.views.first.display.size.height /
+          WidgetsBinding.instance.platformDispatcher.views.first.display
+              .devicePixelRatio) /
+      8;
 
   @override
   void initState() {
@@ -127,22 +129,6 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
     _startAnimation = false;
     _isEdge = false;
     _isLoading = false;
-    _topStartPosition = widget.topStartPosition ?? -60;
-    _topEndPosition = widget.topEndPosition ??
-        (WidgetsBinding.instance.platformDispatcher.views.first.display.size
-                    .height /
-                WidgetsBinding.instance.platformDispatcher.views.first.display
-                    .devicePixelRatio) /
-            8;
-    _bottomStartPosition = widget.bottomStartPosition ?? -60;
-    _bottomEndPosition = widget.bottomEndPosition ??
-        (WidgetsBinding.instance.platformDispatcher.views.first.display.size
-                    .height /
-                WidgetsBinding.instance.platformDispatcher.views.first.display
-                    .devicePixelRatio) /
-            8;
-    _topLoaderWidget = widget.topLoaderWidget ?? RefreshLoader();
-    _bottomLoaderWidget = widget.topLoaderWidget ?? RefreshLoader();
     _animationController = AnimationController(
       vsync: this,
       duration: widget.returnDuration,
@@ -155,12 +141,15 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
     _startAnimation = false;
     _isEdge = false;
     _initialDrag = null;
+    if (_isBottomOverscroll.value == null) return;
+
     if (_drag.value >=
-        (_isBottomOverscroll.value! ? _bottomEndPosition : _topEndPosition)) {
+        (_isBottomOverscroll.value!
+            ? widget.bottomEndPosition ?? _defaultEndPosition
+            : widget.topEndPosition ?? _defaultEndPosition)) {
       _isBottomOverscroll.value!
-          ? widget.onBottomRequestedLoad?.call()
-          : widget.onTopRequestedLoad?.call();
-      await Future.delayed(widget.returnDuration);
+          ? await widget.onBottomRequestedLoad?.call()
+          : await widget.onTopRequestedLoad?.call();
     }
     if (_drag.value > 0.0) _animateToZero();
   }
@@ -182,7 +171,10 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
           : event.position.dy - (_initialDrag ?? event.position.dy);
       _initialDrag = event.position.dy;
       _drag.value = (_drag.value + delta).clamp(
-          0, _isBottomOverscroll.value! ? _bottomEndPosition : _topEndPosition);
+          0,
+          _isBottomOverscroll.value!
+              ? widget.bottomEndPosition ?? _defaultEndPosition
+              : widget.topEndPosition ?? _defaultEndPosition);
     }
   }
 
@@ -192,8 +184,9 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
 
     _animationController.value = _drag.value /
         (_isBottomOverscroll.value!
-            ? _bottomEndPosition
-            : _topEndPosition); // Normalizes the range.
+            ? widget.bottomEndPosition ?? _defaultEndPosition
+            : widget.topEndPosition ??
+                _defaultEndPosition); // Normalizes the range.
 
     _animationController.animateTo(
       0.0, // Target position.
@@ -205,7 +198,9 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
   /// Updates the drag value as the animation progresses.
   void _onAnimationUpdate() {
     _drag.value = _animationController.value *
-        (_isBottomOverscroll.value! ? _bottomEndPosition : _topEndPosition);
+        (_isBottomOverscroll.value!
+            ? widget.bottomEndPosition ?? _defaultEndPosition
+            : widget.topEndPosition ?? _defaultEndPosition);
   }
 
   @override
@@ -248,19 +243,23 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
                   return Positioned(
                     left: 0,
                     right: 0,
-                    bottom: _bottomStartPosition +
-                        value.clamp(0, _bottomEndPosition),
+                    bottom: widget.bottomStartPosition +
+                        value.clamp(
+                            0, widget.bottomEndPosition ?? _defaultEndPosition),
                     child: Visibility(
-                        visible: isBottom ?? false, child: _bottomLoaderWidget),
+                        visible: isBottom ?? false,
+                        child: widget.bottomLoaderWidget),
                   );
                 }
                 return Positioned(
                   left: 0,
                   right: 0,
-                  top: _topStartPosition + value.clamp(0, _topEndPosition),
+                  top: widget.topStartPosition +
+                      value.clamp(
+                          0, widget.topEndPosition ?? _defaultEndPosition),
                   child: Visibility(
                       visible: isBottom != null && !isBottom,
-                      child: _topLoaderWidget),
+                      child: widget.topLoaderWidget),
                 );
               },
             ),

@@ -30,6 +30,7 @@ class ExampleView extends StatefulWidget {
 
 class _ExampleViewState extends State<ExampleView> {
   final content = [1, 2, 3, 4, 5];
+  Widget loader = RefreshLoader();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,12 +39,14 @@ class _ExampleViewState extends State<ExampleView> {
       ),
       body: RefreshOnDragIndicator(
         refreshDragType: RefreshDragEnum.both,
-        onTopRequestedLoad: () {},
-        onBottomRequestedLoad: () {},
+        onTopRequestedLoad: () async {
+          await Future.delayed(Duration(seconds: 2));
+        },
+        onBottomRequestedLoad: () async {},
+        topLoaderWidget: loader,
         bottomEndPosition: 700,
         topEndPosition: 300,
         child: ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
           itemCount: content.length,
           itemBuilder: (context, index) {
             return Container(

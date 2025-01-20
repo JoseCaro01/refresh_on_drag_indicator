@@ -9,3 +9,7 @@
 ## 0.0.3
 
 * Fix: Static analyses.
+
+## 0.0.4
+
+* Fix/Optimize: Behavior when NeverScrollPhysics is applied and use of variables in the widget.
