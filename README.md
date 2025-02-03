@@ -9,7 +9,7 @@ This package integrate a drag funcionality at the bottom and top of a ScrollView
 1. Add the latest version of package to your pubspec.yaml (and run`dart pub get`):
 ```yaml
 dependencies:
-  refresh_on_drag_indicator:^0.0.4
+  refresh_on_drag_indicator:^0.0.5
 ```
 
 2. Import the package and use it in your Flutter App.
@@ -52,6 +52,7 @@ class ExampleView extends StatefulWidget {
 
 class _ExampleViewState extends State<ExampleView> {
   final content = [1, 2, 3, 4, 5];
+  Widget loader = RefreshLoader();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,12 +61,16 @@ class _ExampleViewState extends State<ExampleView> {
       ),
       body: RefreshOnDragIndicator(
         refreshDragType: RefreshDragEnum.both,
-        onTopRequestedLoad: () {},
-        onBottomRequestedLoad: () {},
-        bottomEndPosition: 700,
+        onTopRequestedLoad: () async {
+          await Future.delayed(Duration(seconds: 2));
+        },
+        onBottomRequestedLoad: () async {
+          await Future.delayed(Duration(seconds: 2));
+        },
+        topLoaderWidget: loader,
+        bottomEndPosition: 200,
         topEndPosition: 300,
         child: ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
           itemCount: content.length,
           itemBuilder: (context, index) {
             return Container(
@@ -80,6 +85,7 @@ class _ExampleViewState extends State<ExampleView> {
     );
   }
 }
+
 
 
 ```

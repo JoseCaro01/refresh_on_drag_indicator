@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 /// gesture is detected from the bottom edge of the scrollable content.
 ///
 /// This widget wraps the child widget and listens for drag gestures. When the
-/// drag exceeds a defined threshold, it triggers the `onRequestedLoad` callback
+/// drag exceeds a defined threshold, it triggers the `onTopRequestedLoad` or `onBottomRequestedLoad` callback
 /// and displays a loader animation.
 ///
 /// [RefreshOnDragIndicator] supports both iOS and Android platforms, handling
@@ -157,6 +157,7 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
   /// Handles pointer-move events, updating the drag value based on the user's gesture.
   void _handlePointerMove(PointerMoveEvent event) {
     if (_initialDrag == event.position.dy) return;
+
     if (_isEdge && _startAnimation) {
       _isBottomOverscroll.value ??=
           _initialDrag! > event.position.dy ? true : false;
@@ -164,6 +165,13 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
               _isBottomOverscroll.value!) ||
           (widget.refreshDragType == RefreshDragEnum.bottom &&
               !_isBottomOverscroll.value!)) {
+        return;
+      }
+      if ((_isBottomOverscroll.value! &&
+              _drag.value ==
+                  (widget.bottomEndPosition ?? _defaultEndPosition)) ||
+          (!_isBottomOverscroll.value! &&
+              _drag.value == (widget.topEndPosition ?? _defaultEndPosition))) {
         return;
       }
       final delta = _isBottomOverscroll.value!
@@ -207,7 +215,11 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
   Widget build(BuildContext context) {
     return Listener(
       onPointerDown: (event) {
-        if (_isLoading || _animationController.isAnimating) return;
+        if (_isLoading ||
+            _animationController.isAnimating ||
+            widget.refreshDragType == RefreshDragEnum.none) {
+          return;
+        }
         _initialDrag ??= event.position.dy;
         _isBottomOverscroll.value = null;
         _startAnimation = true;
@@ -272,38 +284,48 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
 
 class RefreshLoader extends StatelessWidget {
   const RefreshLoader({
+    this.backgroundColor = Colors.white,
+    this.color = Colors.blue,
+    this.diameter = 30,
+    this.shape = BoxShape.circle,
+    this.shadow = const [
+      BoxShadow(
+        color: Color.fromRGBO(0, 0, 0, 0.24),
+        blurRadius: 8,
+        spreadRadius: 0,
+        offset: Offset(
+          0,
+          3,
+        ),
+      )
+    ],
+    this.strokeWidth = 3.0,
     super.key,
   });
+  final Color backgroundColor;
+  final Color color;
+  final double diameter;
+  final BoxShape shape;
+  final List<BoxShadow> shadow;
+  final double strokeWidth;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-          width: 30,
-          height: 30,
+          width: diameter,
+          height: diameter,
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Color.fromRGBO(0, 0, 0, 0.24),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                  offset: Offset(
-                    0,
-                    3,
-                  ),
-                ),
-              ]),
+              color: backgroundColor, shape: shape, boxShadow: shadow),
           child: Padding(
             padding: const EdgeInsets.all(2),
             child: CircularProgressIndicator(
-              strokeWidth: 3,
+              strokeWidth: strokeWidth,
             ),
           )),
     );
   }
 }
 
-enum RefreshDragEnum { top, bottom, both }
+enum RefreshDragEnum { top, bottom, both, none }

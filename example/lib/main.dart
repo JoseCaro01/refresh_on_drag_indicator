@@ -42,9 +42,11 @@ class _ExampleViewState extends State<ExampleView> {
         onTopRequestedLoad: () async {
           await Future.delayed(Duration(seconds: 2));
         },
-        onBottomRequestedLoad: () async {},
+        onBottomRequestedLoad: () async {
+          await Future.delayed(Duration(seconds: 2));
+        },
         topLoaderWidget: loader,
-        bottomEndPosition: 700,
+        bottomEndPosition: 200,
         topEndPosition: 300,
         child: ListView.builder(
           itemCount: content.length,
