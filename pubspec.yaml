@@ -1,6 +1,6 @@
 name: refresh_on_drag_indicator
 description: "This package integrate a drag functionality at the bottom and top of a ScrollView having a callback when the drag is completed"
-version: 0.0.5
+version: 0.0.6
 homepage:
 repository: https://github.com/JoseCaro01/refresh_on_drag_indicator
 

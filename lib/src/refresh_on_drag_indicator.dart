@@ -322,6 +322,7 @@ class RefreshLoader extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             child: CircularProgressIndicator(
               strokeWidth: strokeWidth,
+              color: color,
             ),
           )),
     );

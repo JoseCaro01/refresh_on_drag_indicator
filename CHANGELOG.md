@@ -14,6 +14,12 @@
 
 * Fix/Optimize: Behavior when NeverScrollPhysics is applied and use of variables in the widget.
 
-## 0.0.5
+## 0.0.6
 
 * New: Fixed loader movement when get to end position, customize RefreshLoader and added none value to RefreshDragEnum.
+
+## 0.0.6
+
+* Fix: Applied custom color RefreshLoader
+
+
