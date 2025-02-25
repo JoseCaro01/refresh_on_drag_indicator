@@ -159,14 +159,15 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
     if (_initialDrag == event.position.dy) return;
 
     if (_isEdge && _startAnimation) {
-      _isBottomOverscroll.value ??=
-          _initialDrag! > event.position.dy ? true : false;
+      final isBottom = _initialDrag! > event.position.dy ? true : false;
       if ((widget.refreshDragType == RefreshDragEnum.top &&
-              _isBottomOverscroll.value!) ||
+              (_isBottomOverscroll.value ?? isBottom)) ||
           (widget.refreshDragType == RefreshDragEnum.bottom &&
-              !_isBottomOverscroll.value!)) {
+              !(_isBottomOverscroll.value ?? isBottom))) {
+        _isBottomOverscroll.value = null;
         return;
       }
+      _isBottomOverscroll.value ??= isBottom;
       if ((_isBottomOverscroll.value! &&
               _drag.value ==
                   (widget.bottomEndPosition ?? _defaultEndPosition)) ||

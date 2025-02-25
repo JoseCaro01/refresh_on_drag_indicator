@@ -9,7 +9,7 @@ This package integrate a drag funcionality at the bottom and top of a ScrollView
 1. Add the latest version of package to your pubspec.yaml (and run`dart pub get`):
 ```yaml
 dependencies:
-  refresh_on_drag_indicator:^0.0.5
+  refresh_on_drag_indicator:^0.0.7
 ```
 
 2. Import the package and use it in your Flutter App.
