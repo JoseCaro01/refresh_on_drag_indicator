@@ -159,31 +159,22 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
     if (_initialDrag == event.position.dy) return;
 
     if (_isEdge && _startAnimation) {
-      final isBottom = _initialDrag! > event.position.dy ? true : false;
-      if ((widget.refreshDragType == RefreshDragEnum.top &&
-              (_isBottomOverscroll.value ?? isBottom)) ||
-          (widget.refreshDragType == RefreshDragEnum.bottom &&
-              !(_isBottomOverscroll.value ?? isBottom))) {
-        _isBottomOverscroll.value = null;
-        return;
-      }
-      _isBottomOverscroll.value ??= isBottom;
-      if ((_isBottomOverscroll.value! &&
-              _drag.value ==
-                  (widget.bottomEndPosition ?? _defaultEndPosition)) ||
-          (!_isBottomOverscroll.value! &&
-              _drag.value == (widget.topEndPosition ?? _defaultEndPosition))) {
-        return;
-      }
+      _isBottomOverscroll.value ??= _initialDrag! > event.position.dy;
+
+      final endPosition = _isBottomOverscroll.value!
+          ? widget.bottomEndPosition ?? _defaultEndPosition
+          : widget.topEndPosition ?? _defaultEndPosition;
+
+      // If we're already at the final position, do nothing
+      if (_drag.value == endPosition) return;
+
+      // Calculate the movement delta
       final delta = _isBottomOverscroll.value!
           ? _initialDrag! - event.position.dy
           : event.position.dy - (_initialDrag ?? event.position.dy);
+
       _initialDrag = event.position.dy;
-      _drag.value = (_drag.value + delta).clamp(
-          0,
-          _isBottomOverscroll.value!
-              ? widget.bottomEndPosition ?? _defaultEndPosition
-              : widget.topEndPosition ?? _defaultEndPosition);
+      _drag.value = (_drag.value + delta).clamp(0, endPosition);
     }
   }
 
@@ -233,13 +224,28 @@ class _RefreshOnDragIndicatorState extends State<RefreshOnDragIndicator>
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 if (_startAnimation) {
-                  if (defaultTargetPlatform == TargetPlatform.iOS &&
-                      notification.metrics.outOfRange) {
-                    _isEdge = true;
-                  }
-                  if (defaultTargetPlatform == TargetPlatform.android &&
-                      notification is OverscrollNotification) {
-                    _isEdge = true;
+                  final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+                  final isAndroid =
+                      defaultTargetPlatform == TargetPlatform.android;
+
+                  if ((isIOS && notification.metrics.outOfRange) ||
+                      (isAndroid && notification is OverscrollNotification)) {
+                    final pixels = notification.metrics.pixels;
+                    final isNegative = isIOS
+                        ? pixels.isNegative
+                        : (notification as OverscrollNotification)
+                            .overscroll
+                            .isNegative;
+
+                    final isTopOverscroll = isNegative &&
+                        (widget.refreshDragType == RefreshDragEnum.top ||
+                            widget.refreshDragType == RefreshDragEnum.both);
+
+                    final isBottomOverscroll = !isNegative &&
+                        (widget.refreshDragType == RefreshDragEnum.bottom ||
+                            widget.refreshDragType == RefreshDragEnum.both);
+
+                    _isEdge = isTopOverscroll || isBottomOverscroll;
                   }
                 }
                 return true;

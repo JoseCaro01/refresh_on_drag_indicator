@@ -25,3 +25,7 @@
 ## 0.0.7
 
 - Fix: Prevent bottomLoader from appearing when RefreshDragEnum is set to top, and topLoader from appearing when set to bottom.
+
+## 0.0.8
+
+Fix: Corrected overscroll detection when RefreshDragEnum was set to either top or bottom. After multiple overscrolls in one direction, followed by a scroll in the opposite direction, _isEdge was incorrectly marked as true. This fix ensures accurate drag direction detection and proper refresh process activation.
